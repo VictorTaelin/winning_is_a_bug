@@ -16,10 +16,10 @@ If you ever see the win screen, the type checker is broken. File a bug.
 
 The whole game logic — map, movement, wrap-around, grabbing, the `run`
 function the theorem quantifies over — is one Bend file:
-[`src/main.bend`](src/main.bend). The build compiles it to JS with
+[`main.bend`](main.bend). The build compiles it to JS with
 [Bend4](https://github.com/HigherOrderCO/bend4) (`bend --to`), captures the
 map the program prints, and inlines both plus a small canvas UI
-([`src/main.js`](src/main.js)) into one self-contained page. The browser
+([`main.js`](main.js)) into one self-contained page. The browser
 never decides anything: every keypress goes through the compiled `run`.
 
 ```bash

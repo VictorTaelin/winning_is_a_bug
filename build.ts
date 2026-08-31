@@ -1,4 +1,4 @@
-// build: compiles src/main.bend to JS, captures the map the Bend program
+// build: compiles main.bend to JS, captures the map the Bend program
 // prints, and inlines game + map + UI into one self-contained dist/index.html.
 //
 //   bun build.ts        # writes dist/index.html
@@ -11,7 +11,7 @@ const BEND = process.env.BEND ?? "bend";
 
 // 1. Bend -> JS.
 await $`mkdir -p .tmp dist`;
-await $`${BEND} src/main.bend --to .tmp/game.js`;
+await $`${BEND} main.bend --to .tmp/game.js`;
 
 // 2. Run the emitted program: its stdout carries the map grid.
 const out  = await $`bun .tmp/game.js`.text();
@@ -24,8 +24,8 @@ const lib = (await Bun.file(".tmp/game.js").text())
   .replace("io_exit($main$);", "");
 
 // 4. Inline everything into the page.
-const ui   = await Bun.file("src/main.js").text();
-const html = (await Bun.file("src/main.html").text())
+const ui   = await Bun.file("main.js").text();
+const html = (await Bun.file("main.html").text())
   .replace("__GAME_JS__", () => lib)
   .replace("__MAP__", () => JSON.stringify(grid))
   .replace("__UI_JS__", () => ui);

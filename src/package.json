@@ -1,0 +1,11 @@
+{
+  "name": "winning-is-a-bug",
+  "private": true,
+  "scripts": {
+    "dev": "bun index.html",
+    "build": "bend-build index.html ../docs"
+  },
+  "dependencies": {
+    "bend-lang": "file:../../bend4/bend2"
+  }
+}

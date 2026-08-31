@@ -1,0 +1,4 @@
+preload = ["bend-lang/plugin"]
+
+[serve.static]
+plugins = ["bend-lang/plugin"]

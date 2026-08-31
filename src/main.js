@@ -1,34 +1,36 @@
-// Winning Is A Bug: the visual half. The map is parsed from MAP_TEXT, which
-// the build captured from the Bend program's own stdout, so the level has
-// one author: src/main.bend. Every action goes through the compiled `run`;
-// this file only draws the state that comes back.
+// Winning Is A Bug: the visual half. The game itself is main.bend, imported
+// as a module: the bend-lang bun plugin compiles it on the fly, and every
+// def becomes a function on Game. The map is asked from Game.grid, so the
+// level has one author. Every action goes through Game.run; this file only
+// draws the state that comes back.
+
+import Game from "./main.bend";
 
 // Map
 // ===
 
-const ROWS  = MAP_TEXT.trim().split("\n");
+const ROWS  = Game.grid(Game.map_h() - 1n).split("\n");
 const H     = ROWS.length;
 const W     = ROWS[0].length;
 const WALLS = new Set();
 let FLAG  = { x: 0, y: 0 };
-let START = { x: 0, y: 0 };
 for (let y = 0; y < H; y++) {
   for (let x = 0; x < W; x++) {
     const c = ROWS[y][x];
     if (c === "#") WALLS.add(x + "," + y);
-    if (c === "F") FLAG  = { x, y };
-    if (c === "P") START = { x, y };
+    if (c === "F") FLAG = { x, y };
   }
 }
 
 // Bend bridge
 // ===========
+// The conventions: a constructor is {$: "Name", field: value, ...} (live
+// fields only), Nat is BigInt, Bool is a plain boolean.
 
-const game = (x, y, won) => ({ $: "Game", $0: BigInt(x), $1: BigInt(y), $2: won });
-const one  = (act) => ({ $: "Con", $0: { $: act }, $1: { $: "Nil" } });
-const send = (act, g) => run_loop($run$(one(act), g));
+const one  = (act) => ({ $: "Con", head: { $: act }, tail: { $: "Nil" } });
+const send = (act, g) => Game.run(one(act), g);
 
-let st    = game(START.x, START.y, false);
+let st    = Game.init();
 let moves = 0;
 let grabs = 0;
 
@@ -106,8 +108,8 @@ function draw(t) {
     }
   }
   drawFlag(FLAG.x * TILE, FLAG.y * TILE, t);
-  let x = Number(st.$0);
-  let y = Number(st.$1);
+  let x = Number(st.x);
+  let y = Number(st.y);
   if (anim) {
     const k = Math.min((t - anim.t0) / 90, 1);
     x = anim.fx + (anim.tx - anim.fx) * k;
@@ -135,15 +137,15 @@ function toast(msg) {
 const DELTA = { Up: [0, -1], Down: [0, 1], Left: [-1, 0], Right: [1, 0] };
 
 function act(name) {
-  const fx = Number(st.$0);
-  const fy = Number(st.$1);
+  const fx = Number(st.x);
+  const fy = Number(st.y);
   st = send(name, st);
-  const tx = Number(st.$0);
-  const ty = Number(st.$1);
+  const tx = Number(st.x);
+  const ty = Number(st.y);
   if (name === "Grab") {
     grabs++;
     document.getElementById("grabs").textContent = grabs;
-    if (!st.$2) toast("nothing to grab here");
+    if (!st.won) toast("nothing to grab here");
   } else {
     moves++;
     document.getElementById("moves").textContent = moves;
@@ -154,7 +156,7 @@ function act(name) {
       anim = { fx, fy, tx, ty, t0: performance.now() };    // a plain step
     }                                                      // else: the wrap
   }
-  if (st.$2) {
+  if (st.won) {
     document.getElementById("status").textContent = "YOU WON?!";
     toast("YOU WON?! please file a bug: this is mathematically impossible");
   }

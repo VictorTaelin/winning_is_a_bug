@@ -18,12 +18,12 @@ If you ever see the win screen, the type checker is broken. File a bug.
 
 This repo is a working example of the intended division of labor:
 
-- [`src/laws.bend`](src/laws.bend) is the **human's** file. It states what
+- [`laws.bend`](laws.bend) is the **human's** file. It states what
   must be true and nothing else. Each law names a proof that the other
   file must supply.
-- [`src/main.bend`](src/main.bend) is the **AI's** file. The game, the
+- [`main.bend`](main.bend) is the **AI's** file. The game, the
   algorithms, and the proofs live here, and all of it may be rewritten at
-  will — `bend src/laws.bend` fails the moment a law stops holding.
+  will — `bend laws.bend` fails the moment a law stops holding.
 
 The human maintains the wall; the machine does anything it wants on the
 other side of it, except lie.
@@ -31,10 +31,10 @@ other side of it, except lie.
 ## How it runs
 
 There is no build script and no generated glue. The browser UI
-([`src/main.js`](src/main.js)) imports the game directly:
+([`web/main.js`](web/main.js)) imports the game directly:
 
 ```js
-import Game from "./main.bend";
+import Game from "../main.bend";
 ```
 
 The [bend-lang](https://github.com/HigherOrderCO/bend4) plugin compiles
@@ -44,11 +44,11 @@ node (`node --import bend-lang/register`). Every def becomes a function on
 through `Game.run`. The browser never decides anything.
 
 ```bash
-cd src
+cd web
 bun install         # gets bend-lang
 bun run dev         # serves index.html, .bend imports and all
 bun run build       # bend-build index.html ../docs
-bend laws.bend      # check the laws (needs bend4's bend on the PATH)
+bend ../laws.bend   # check the laws (needs bend4's bend on the PATH)
 ```
 
 ## The level
@@ -80,4 +80,4 @@ cell) is finite, so it is not argued: `chk_all` enumerates the whole map
 and the checker evaluates it to `True`. Reflection lemmas index that
 certificate at arbitrary coordinates, and a grab off the flag never sets
 `won` because the flag's cell is in the room. No axioms, no TODOs, no
-`unsafe`: `bend src/laws.bend` answers "All 333 definitions check."
+`unsafe`: `bend laws.bend` answers "All 333 definitions check."

@@ -4,7 +4,7 @@
 // level has one author. Every action goes through Game.run; this file only
 // draws the state that comes back.
 
-import Game from "./main.bend";
+import Game from "../main.bend";
 
 // Map
 // ===

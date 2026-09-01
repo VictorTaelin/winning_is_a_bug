@@ -1,29 +1,20 @@
 # Winning Is A Bug -- the machine.
 #
-# This file is the AI's side of the contract: every algorithm, every data
-# type, and every proof lives here. The human's side is laws.bend, which
-# imports this module and pins the theorem `winning_is_a_bug` against it.
-# Anything in this file may be rewritten at will -- the laws hold or the
-# book stops checking.
+# This file is the AI's side of the contract: every algorithm and every
+# proof lives here. The human's side is laws.bend: types and asserts,
+# which this file imports and must fill -- an unfilled assert is an
+# error, so the laws hold or the book stops checking. Anything in this
+# file may be rewritten at will.
 #
 # Three parts:
 #   1. The game: a torus map, a walled room, a flag, five actions.
 #   2. The show: the level as text (the front end asks `grid` for it).
-#   3. The proof: `winning_proof`, by an invariant ("the player stands on
-#      a safe cell") kept through every action, with the finite map facts
-#      checked by computation.
+#   3. The proof: `Laws.winning_is_a_bug`, by an invariant ("the player
+#      stands on a safe cell") kept through every action, with the
+#      finite map facts checked by computation.
 
 import Base
-
-type Act is Data:
-  Up{}
-  Down{}
-  Left{}
-  Right{}
-  Grab{}
-
-type Game is Data:
-  Game{x: Nat, y: Nat, won: Bool}
+import ./laws.bend as Laws
 
 # Map
 # ---
@@ -115,51 +106,51 @@ def warp_left(x: Nat) -> Nat:
 def warp_right(+x: Nat) -> Nat:
   pick(Nat, nat_eq(1n+x, map_w()), 0n, 1n+x)
 
-def move(+tx: Nat, +ty: Nat, g: Game) -> Game:
-  Game{x, y, w0} = g
+def move(+tx: Nat, +ty: Nat, g: Laws.Game) -> Laws.Game:
+  Laws.Game{x, y, w0} = g
   +w = w0
-  pick(Game, wall(tx, ty), Game{x, y, w}, Game{tx, ty, w})
+  pick(Laws.Game, wall(tx, ty), Laws.Game{x, y, w}, Laws.Game{tx, ty, w})
 
-def step(a: Act, g: Game) -> Game:
+def step(a: Laws.Act, g: Laws.Game) -> Laws.Game:
   match a:
-    case Up{}:
-      Game{x0, y0, w} = g
+    case Laws.Up{}:
+      Laws.Game{x0, y0, w} = g
       +x = x0
       +y = y0
-      move(x, warp_up(y), Game{x, y, w})
-    case Down{}:
-      Game{x0, y0, w} = g
+      move(x, warp_up(y), Laws.Game{x, y, w})
+    case Laws.Down{}:
+      Laws.Game{x0, y0, w} = g
       +x = x0
       +y = y0
-      move(x, warp_down(y), Game{x, y, w})
-    case Left{}:
-      Game{x0, y0, w} = g
+      move(x, warp_down(y), Laws.Game{x, y, w})
+    case Laws.Left{}:
+      Laws.Game{x0, y0, w} = g
       +x = x0
       +y = y0
-      move(warp_left(x), y, Game{x, y, w})
-    case Right{}:
-      Game{x0, y0, w} = g
+      move(warp_left(x), y, Laws.Game{x, y, w})
+    case Laws.Right{}:
+      Laws.Game{x0, y0, w} = g
       +x = x0
       +y = y0
-      move(warp_right(x), y, Game{x, y, w})
-    case Grab{}:
-      Game{x0, y0, w} = g
+      move(warp_right(x), y, Laws.Game{x, y, w})
+    case Laws.Grab{}:
+      Laws.Game{x0, y0, w} = g
       +x = x0
       +y = y0
-      Game{x, y, w || (nat_eq(x, flag_x()) && nat_eq(y, flag_y()))}
+      Laws.Game{x, y, w || (nat_eq(x, flag_x()) && nat_eq(y, flag_y()))}
 
-def init() -> Game:
-  Game{start_x(), start_y(), False{}}
+def Laws.init():
+  Laws.Game{start_x(), start_y(), False{}}
 
-def run(t: List<Act>, g: Game) -> Game:
+def Laws.run(t, g):
   match t:
     case Nil{}:
       g
     case Con{a, as}:
-      run(as, step(a, g))
+      Laws.run(as, step(a, g))
 
-def won(g: Game) -> Bool:
-  Game{x, y, w} = g
+def Laws.won(g):
+  Laws.Game{x, y, w} = g
   w
 
 # Show
@@ -323,37 +314,37 @@ def okpos(+x: Nat, +y: Nat) -> Bool:
   (nat_le(x, 13n) && nat_le(y, 9n))
     && (Bool.not(room(x, y)) && Bool.not(wall(x, y)))
 
-def tx(+a: Act, +x: Nat, +y: Nat) -> Nat:
+def tx(+a: Laws.Act, +x: Nat, +y: Nat) -> Nat:
   match a:
-    case Up{}:
+    case Laws.Up{}:
       x
-    case Down{}:
+    case Laws.Down{}:
       x
-    case Left{}:
+    case Laws.Left{}:
       warp_left(x)
-    case Right{}:
+    case Laws.Right{}:
       warp_right(x)
-    case Grab{}:
+    case Laws.Grab{}:
       x
 
-def ty(+a: Act, +x: Nat, +y: Nat) -> Nat:
+def ty(+a: Laws.Act, +x: Nat, +y: Nat) -> Nat:
   match a:
-    case Up{}:
+    case Laws.Up{}:
       warp_up(y)
-    case Down{}:
+    case Laws.Down{}:
       warp_down(y)
-    case Left{}:
+    case Laws.Left{}:
       y
-    case Right{}:
+    case Laws.Right{}:
       y
-    case Grab{}:
+    case Laws.Grab{}:
       y
 
-def chk(+a: Act, +x: Nat, +y: Nat) -> Bool:
+def chk(+a: Laws.Act, +x: Nat, +y: Nat) -> Bool:
   imp(okpos(x, y) && Bool.not(wall(tx(a, x, y), ty(a, x, y))),
     okpos(tx(a, x, y), ty(a, x, y)))
 
-def chk_row(+a: Act, +x: Nat, y: Nat) -> Bool:
+def chk_row(+a: Laws.Act, +x: Nat, y: Nat) -> Bool:
   match y:
     case 0n:
       chk(a, x, 0n)
@@ -361,7 +352,7 @@ def chk_row(+a: Act, +x: Nat, y: Nat) -> Bool:
       +q = q0
       chk(a, x, 1n+q) && chk_row(a, x, q)
 
-def chk_all(+a: Act, x: Nat) -> Bool:
+def chk_all(+a: Laws.Act, x: Nat) -> Bool:
   match x:
     case 0n:
       chk_row(a, 0n, 9n)
@@ -369,7 +360,7 @@ def chk_all(+a: Act, x: Nat) -> Bool:
       +p = p0
       chk_row(a, 1n+p, 9n) && chk_all(a, p)
 
-def chk_row_at(+a: Act, +x: Nat, y: Nat, j: Nat, wr: T(chk_row(a, x, y)),
+def chk_row_at(+a: Laws.Act, +x: Nat, y: Nat, j: Nat, wr: T(chk_row(a, x, y)),
   wj: T(nat_le(j, y))) -> T(chk(a, x, j)):
   match y:
     case 0n:
@@ -395,7 +386,7 @@ def chk_row_at(+a: Act, +x: Nat, y: Nat, j: Nat, wr: T(chk_row(a, x, y)),
                 e => %sym(Nat, jp, q, e) : T(chk(a, x, 1n+_))
                      wp))
 
-def chk_all_at(+a: Act, x: Nat, i: Nat, wa: T(chk_all(a, x)),
+def chk_all_at(+a: Laws.Act, x: Nat, i: Nat, wa: T(chk_all(a, x)),
   wi: T(nat_le(i, x))) -> T(chk_row(a, i, 9n)):
   match x:
     case 0n:
@@ -423,12 +414,12 @@ def chk_all_at(+a: Act, x: Nat, i: Nat, wa: T(chk_all(a, x)),
                 e => %sym(Nat, ip, p, e) : T(chk_row(a, 1n+_, 9n))
                      wp))
 
-def cert(+a: Act, +x: Nat, +y: Nat, ca: T(chk_all(a, 13n)),
+def cert(+a: Laws.Act, +x: Nat, +y: Nat, ca: T(chk_all(a, 13n)),
   lx: T(nat_le(x, 13n)), ly: T(nat_le(y, 9n))) -> T(chk(a, x, y)):
   chk_row_at(a, x, 9n, y, chk_all_at(a, 13n, x, ca, lx), ly)
 
 # the safe target: from a safe cell, a step lands on a wall or stays safe
-def go_ok(+a: Act, +x: Nat, +y: Nat, +hp: T(okpos(x, y)),
+def go_ok(+a: Laws.Act, +x: Nat, +y: Nat, +hp: T(okpos(x, y)),
   ca: T(chk_all(a, 13n)), e: {False{} == wall(tx(a, x, y), ty(a, x, y)) : Bool})
   -> T(okpos(tx(a, x, y), ty(a, x, y))):
   and_split(nat_le(x, 13n) && nat_le(y, 9n),
@@ -467,29 +458,29 @@ def no_flag(+x: Nat, +y: Nat, +hp: T(okpos(x, y)),
                 Unit{}))))
 
 # the chosen cell: a step from a safe cell lands somewhere safe (or stays)
-def go_pos(+a: Act, +x: Nat, +y: Nat, hp: T(okpos(x, y)),
+def go_pos(+a: Laws.Act, +x: Nat, +y: Nat, hp: T(okpos(x, y)),
   ca: T(chk_all(a, 13n)))
   -> &nx: Nat -> &ny: Nat -> T(okpos(nx, ny))
-   & {Game{nx, ny, False{}}
-      == move(tx(a, x, y), ty(a, x, y), Game{x, y, False{}}) : Game}:
+   & {Laws.Game{nx, ny, False{}}
+      == move(tx(a, x, y), ty(a, x, y), Laws.Game{x, y, False{}}) : Laws.Game}:
   +hp2 = hp
-  pick_split(Game,
+  pick_split(Laws.Game,
     gz => &nx: Nat -> &ny: Nat -> T(okpos(nx, ny))
-        & {Game{nx, ny, False{}} == gz : Game},
+        & {Laws.Game{nx, ny, False{}} == gz : Laws.Game},
     wall(tx(a, x, y), ty(a, x, y)),
-    Game{x, y, False{}},
-    Game{tx(a, x, y), ty(a, x, y), False{}},
+    Laws.Game{x, y, False{}},
+    Laws.Game{tx(a, x, y), ty(a, x, y), False{}},
     et => (x, (y, (hp2, {==}))),
     ef => (tx(a, x, y), (ty(a, x, y), (go_ok(a, x, y, hp2, ca, ef), {==}))))
 
-def use4(-a: Act, -x: Nat, -y: Nat,
+def use4(-a: Laws.Act, -x: Nat, -y: Nat,
   w: &nx: Nat -> &ny: Nat -> T(okpos(nx, ny))
-   & {Game{nx, ny, False{}}
-      == move(tx(a, x, y), ty(a, x, y), Game{x, y, False{}}) : Game},
+   & {Laws.Game{nx, ny, False{}}
+      == move(tx(a, x, y), ty(a, x, y), Laws.Game{x, y, False{}}) : Laws.Game},
   -P: Type,
   k: @nx: Nat -> @ny: Nat -> @hq: T(okpos(nx, ny))
-   -> @eq: {Game{nx, ny, False{}}
-            == move(tx(a, x, y), ty(a, x, y), Game{x, y, False{}}) : Game}
+   -> @eq: {Laws.Game{nx, ny, False{}}
+            == move(tx(a, x, y), ty(a, x, y), Laws.Game{x, y, False{}}) : Laws.Game}
    -> P) -> P:
   (nx, w1) = w
   (ny, w2) = w1
@@ -497,66 +488,65 @@ def use4(-a: Act, -x: Nat, -y: Nat,
   k(nx, ny, hq, eq)
 
 # The theorem's engine# The theorem's engine# The theorem's engine: from any safe unwon state, no action list wins.
-def run_false(t: List<Act>, x: Nat, y: Nat, hp: T(okpos(x, y)))
-  -> {won(run(t, Game{x, y, False{}})) == False{} : Bool}:
+def run_false(t: List<Laws.Act>, x: Nat, y: Nat, hp: T(okpos(x, y)))
+  -> {Laws.won(Laws.run(t, Laws.Game{x, y, False{}})) == False{} : Bool}:
   match t:
     case Nil{}:
       {==}
-    case Con{Up{}, as0}:
+    case Con{Laws.Up{}, as0}:
       +x2 = x
       +y2 = y
-      use4(Up{}, x2, y2, go_pos(Up{}, x2, y2, hp, Unit{}),
-        {won(run(as0, move(tx(Up{}, x2, y2), ty(Up{}, x2, y2),
-          Game{x2, y2, False{}}))) == False{} : Bool},
+      use4(Laws.Up{}, x2, y2, go_pos(Laws.Up{}, x2, y2, hp, Unit{}),
+        {Laws.won(Laws.run(as0, move(tx(Laws.Up{}, x2, y2), ty(Laws.Up{}, x2, y2),
+          Laws.Game{x2, y2, False{}}))) == False{} : Bool},
         nx => ny => hq => eq =>
-          %eq : {won(run(as0, _)) == False{} : Bool}
+          %eq : {Laws.won(Laws.run(as0, _)) == False{} : Bool}
           run_false(as0, nx, ny, hq))
-    case Con{Down{}, as0}:
+    case Con{Laws.Down{}, as0}:
       +x2 = x
       +y2 = y
-      use4(Down{}, x2, y2, go_pos(Down{}, x2, y2, hp, Unit{}),
-        {won(run(as0, move(tx(Down{}, x2, y2), ty(Down{}, x2, y2),
-          Game{x2, y2, False{}}))) == False{} : Bool},
+      use4(Laws.Down{}, x2, y2, go_pos(Laws.Down{}, x2, y2, hp, Unit{}),
+        {Laws.won(Laws.run(as0, move(tx(Laws.Down{}, x2, y2), ty(Laws.Down{}, x2, y2),
+          Laws.Game{x2, y2, False{}}))) == False{} : Bool},
         nx => ny => hq => eq =>
-          %eq : {won(run(as0, _)) == False{} : Bool}
+          %eq : {Laws.won(Laws.run(as0, _)) == False{} : Bool}
           run_false(as0, nx, ny, hq))
-    case Con{Left{}, as0}:
+    case Con{Laws.Left{}, as0}:
       +x2 = x
       +y2 = y
-      use4(Left{}, x2, y2, go_pos(Left{}, x2, y2, hp, Unit{}),
-        {won(run(as0, move(tx(Left{}, x2, y2), ty(Left{}, x2, y2),
-          Game{x2, y2, False{}}))) == False{} : Bool},
+      use4(Laws.Left{}, x2, y2, go_pos(Laws.Left{}, x2, y2, hp, Unit{}),
+        {Laws.won(Laws.run(as0, move(tx(Laws.Left{}, x2, y2), ty(Laws.Left{}, x2, y2),
+          Laws.Game{x2, y2, False{}}))) == False{} : Bool},
         nx => ny => hq => eq =>
-          %eq : {won(run(as0, _)) == False{} : Bool}
+          %eq : {Laws.won(Laws.run(as0, _)) == False{} : Bool}
           run_false(as0, nx, ny, hq))
-    case Con{Right{}, as0}:
+    case Con{Laws.Right{}, as0}:
       +x2 = x
       +y2 = y
-      use4(Right{}, x2, y2, go_pos(Right{}, x2, y2, hp, Unit{}),
-        {won(run(as0, move(tx(Right{}, x2, y2), ty(Right{}, x2, y2),
-          Game{x2, y2, False{}}))) == False{} : Bool},
+      use4(Laws.Right{}, x2, y2, go_pos(Laws.Right{}, x2, y2, hp, Unit{}),
+        {Laws.won(Laws.run(as0, move(tx(Laws.Right{}, x2, y2), ty(Laws.Right{}, x2, y2),
+          Laws.Game{x2, y2, False{}}))) == False{} : Bool},
         nx => ny => hq => eq =>
-          %eq : {won(run(as0, _)) == False{} : Bool}
+          %eq : {Laws.won(Laws.run(as0, _)) == False{} : Bool}
           run_false(as0, nx, ny, hq))
-    case Con{Grab{}, as0}:
+    case Con{Laws.Grab{}, as0}:
       +x2 = x
       +y2 = y
       +hp2 = hp
       bool_case(nat_eq(x2, flag_x()) && nat_eq(y2, flag_y()),
-        z => {won(run(as0, Game{x2, y2, z})) == False{} : Bool},
+        z => {Laws.won(Laws.run(as0, Laws.Game{x2, y2, z})) == False{} : Bool},
         et => Empty.absurd(
-          {won(run(as0, Game{x2, y2, True{}})) == False{} : Bool},
+          {Laws.won(Laws.run(as0, Laws.Game{x2, y2, True{}})) == False{} : Bool},
           no_flag(x2, y2, hp2, et)),
         ef => run_false(as0, x2, y2, hp2))
 
-# The theorem, as laws.bend states it: the start cell is safe (checked
-# by computation), and run_false carries that safety through any list.
-def winning_proof(t: List<Act>)
-  -> {won(run(t, init())) == False{} : Bool}:
+# The law, filled: the start cell is safe (checked by computation), and
+# run_false carries that safety through any list of actions.
+def Laws.winning_is_a_bug(t):
   run_false(t, start_x(), start_y(), Unit{})
 
 def main() -> IO(Unit):
   do IO<Unit>:
     u : Unit <- IO.print(grid(Nat.sub(map_h(), 1n)))
-    IO.print(pick(String, won(run([Left{}, Left{}, Up{}, Grab{}], init())),
+    IO.print(pick(String, Laws.won(Laws.run([Laws.Left{}, Laws.Left{}, Laws.Up{}, Laws.Grab{}], Laws.init())),
       "WON (this line is unreachable)", "still not won"))

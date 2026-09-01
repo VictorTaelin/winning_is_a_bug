@@ -5,9 +5,9 @@ ships with a **formal proof** that you can't. Not "we tested it a lot" —
 a machine-checked theorem, over every input sequence of every length:
 
 ```python
-def winning_is_a_bug(t: List<Game.Act>)
-  -> {Game.won(Game.run(t, Game.init())) == False{} : Bool}:
-  Game.winning_proof(t)
+assert winning_is_a_bug:
+  forall t: List<Act>
+  {won(run(t, init())) == False{} : Bool}
 ```
 
 If you ever see the win screen, the type checker is broken. File a bug.
@@ -18,12 +18,13 @@ If you ever see the win screen, the type checker is broken. File a bug.
 
 This repo is a working example of the intended division of labor:
 
-- [`laws.bend`](laws.bend) is the **human's** file. It states what
-  must be true and nothing else. Each law names a proof that the other
-  file must supply.
-- [`main.bend`](main.bend) is the **AI's** file. The game, the
-  algorithms, and the proofs live here, and all of it may be rewritten at
-  will — `bend laws.bend` fails the moment a law stops holding.
+- [`laws.bend`](laws.bend) is the **human's** file: types and asserts,
+  nothing else. An assert states what must be true; it proves nothing.
+- [`main.bend`](main.bend) is the **AI's** file. It imports the laws and
+  must *fill* every assert — Bend rejects an unfilled assert — so the
+  game, the algorithms, and the proofs live here, and all of it may be
+  rewritten at will: `bend main.bend` fails the moment a law stops
+  holding.
 
 The human maintains the wall; the machine does anything it wants on the
 other side of it, except lie.
@@ -48,7 +49,7 @@ cd web
 bun install         # gets bend-lang
 bun run dev         # serves index.html, .bend imports and all
 bun run build       # bend-build index.html ../docs
-bend ../laws.bend   # check the laws (needs bend4's bend on the PATH)
+bend ../main.bend --check   # every law must be filled (needs bend on PATH)
 ```
 
 ## The level
@@ -80,4 +81,4 @@ cell) is finite, so it is not argued: `chk_all` enumerates the whole map
 and the checker evaluates it to `True`. Reflection lemmas index that
 certificate at arbitrary coordinates, and a grab off the flag never sets
 `won` because the flag's cell is in the room. No axioms, no TODOs, no
-`unsafe`: `bend laws.bend` answers "All 333 definitions check."
+`unsafe`: `bend main.bend --check` answers "All 332 definitions check."

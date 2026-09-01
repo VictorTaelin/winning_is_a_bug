@@ -1,15 +1,44 @@
 # Winning Is A Bug -- the laws.
 #
-# This file is the human's half of the codebase. It states what must be
-# true; it proves nothing and computes nothing. The other half is
-# main.bend -- the game, its algorithms, and the proofs -- and that half
-# is written and rewritten by an AI. The contract between the two halves
-# is this file: each law below names a proof that main.bend must supply,
-# and `bend laws.bend` fails the moment any of them breaks. The human
-# edits the laws; the AI can do anything it wants on the other side of
-# the wall, except lie.
+# This file is the human's half of the codebase. It holds types and
+# asserts -- specs -- and nothing else: no algorithm, no proof. The other
+# half is main.bend, written and rewritten by an AI, which imports this
+# file and must FILL every assert below. Bend makes the contract hard:
+# an unfilled assert is an error outside base, so the moment main.bend
+# stops proving a law, the book stops checking. The human edits the
+# laws; the AI can do anything it wants on the other side of the wall,
+# except lie.
 
-import ./main.bend as Game
+import Base
+
+# The player's inputs: a step in one of four directions, or a grab.
+
+type Act is Data:
+  Up{}
+  Down{}
+  Left{}
+  Right{}
+  Grab{}
+
+# The whole game state: the player's cell, and whether the game is won.
+
+type Game is Data:
+  Game{x: Nat, y: Nat, won: Bool}
+
+# The game, as three functions: where it starts, how a list of actions
+# drives it, and what winning means.
+
+assert init:
+  Game
+
+assert run:
+  forall t: List<Act>
+  forall g: Game
+  Game
+
+assert won:
+  forall g: Game
+  Bool
 
 # LAW: winning is a bug.
 #
@@ -19,6 +48,6 @@ import ./main.bend as Game
 # the room. The room has only two walls. Try anyway: if you ever see the
 # win screen, file a bug against the type checker.
 
-def winning_is_a_bug(t: List<Game.Act>)
-  -> {Game.won(Game.run(t, Game.init())) == False{} : Bool}:
-  Game.winning_proof(t)
+assert winning_is_a_bug:
+  forall t: List<Act>
+  {won(run(t, init())) == False{} : Bool}

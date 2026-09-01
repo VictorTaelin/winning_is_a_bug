@@ -4,16 +4,7 @@
 // level has one author. Every action goes through Game.run; this file only
 // draws the state that comes back.
 
-import M from "../main.bend";
-
-// laws.bend names the API; its defs land under the Laws namespace
-const Game = {
-  init: M["Laws.init"],
-  run: M["Laws.run"],
-  won: M["Laws.won"],
-  grid: M.grid,
-  map_h: M.map_h,
-};
+import Game from "../main.bend";
 
 // Map
 // ===
@@ -36,7 +27,7 @@ for (let y = 0; y < H; y++) {
 // The conventions: a constructor is {$: "Name", field: value, ...} (live
 // fields only), Nat is BigInt, Bool is a plain boolean.
 
-const one  = (act) => ({ $: "Con", head: { $: "Laws." + act }, tail: { $: "Nil" } });
+const one  = (act) => ({ $: "Con", head: { $: act }, tail: { $: "Nil" } });
 const send = (act, g) => Game.run(one(act), g);
 
 let st    = Game.init();

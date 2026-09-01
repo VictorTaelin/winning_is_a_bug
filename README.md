@@ -6,8 +6,8 @@ a machine-checked theorem, over every input sequence of every length:
 
 ```python
 assert winning_is_a_bug:
-  forall t: List<Act>
-  {won(run(t, init())) == False{} : Bool}
+  forall t: List<Game.Act>
+  {Game.won(Game.run(t, Game.init())) == False{} : Bool}
 ```
 
 If you ever see the win screen, the type checker is broken. File a bug.
@@ -18,13 +18,15 @@ If you ever see the win screen, the type checker is broken. File a bug.
 
 This repo is a working example of the intended division of labor:
 
-- [`laws.bend`](laws.bend) is the **human's** file: types and asserts,
-  nothing else. An assert states what must be true; it proves nothing.
-- [`main.bend`](main.bend) is the **AI's** file. It imports the laws and
-  must *fill* every assert — Bend rejects an unfilled assert — so the
-  game, the algorithms, and the proofs live here, and all of it may be
-  rewritten at will: `bend main.bend` fails the moment a law stops
-  holding.
+- [`main.bend`](main.bend) — the **game**. The whole program, nothing
+  else.
+- [`laws.bend`](laws.bend) — the **claims**. The human's file: it
+  imports the game and asserts what must be true about it. Asserts only;
+  it proves nothing.
+- [`cert.bend`](cert.bend) — the **proofs**. The AI's file: it must fill
+  every assert the laws make — Bend rejects an unfilled assert — so
+  `bend cert.bend` is the whole verification, and it fails the moment a
+  law stops holding.
 
 The human maintains the wall; the machine does anything it wants on the
 other side of it, except lie.
@@ -49,7 +51,7 @@ cd web
 bun install         # gets bend-lang
 bun run dev         # serves index.html, .bend imports and all
 bun run build       # bend-build index.html ../docs
-bend ../main.bend --check   # every law must be filled (needs bend on PATH)
+bend ../cert.bend --check   # every law must be filled (needs bend on PATH)
 ```
 
 ## The level
@@ -81,4 +83,4 @@ cell) is finite, so it is not argued: `chk_all` enumerates the whole map
 and the checker evaluates it to `True`. Reflection lemmas index that
 certificate at arbitrary coordinates, and a grab off the flag never sets
 `won` because the flag's cell is in the room. No axioms, no TODOs, no
-`unsafe`: `bend main.bend --check` answers "All 332 definitions check."
+`unsafe`: `bend cert.bend --check` answers "All 332 definitions check."

@@ -1,44 +1,15 @@
 # Winning Is A Bug -- the laws.
 #
-# This file is the human's half of the codebase. It holds types and
-# asserts -- specs -- and nothing else: no algorithm, no proof. The other
-# half is main.bend, written and rewritten by an AI, which imports this
-# file and must FILL every assert below. Bend makes the contract hard:
-# an unfilled assert is an error outside base, so the moment main.bend
-# stops proving a law, the book stops checking. The human edits the
-# laws; the AI can do anything it wants on the other side of the wall,
-# except lie.
+# This file is the human's half of the codebase: the claims, and nothing
+# else. It imports the game and states what must be true about it; it
+# proves nothing and computes nothing. The proofs live in cert.bend,
+# which is written and rewritten by an AI and must fill every assert
+# below -- Bend rejects an unfilled assert, so the moment a law stops
+# holding, the book stops checking. The human edits the laws; the AI can
+# do anything it wants on the other side of the wall, except lie.
 
 import Base
-
-# The player's inputs: a step in one of four directions, or a grab.
-
-type Act is Data:
-  Up{}
-  Down{}
-  Left{}
-  Right{}
-  Grab{}
-
-# The whole game state: the player's cell, and whether the game is won.
-
-type Game is Data:
-  Game{x: Nat, y: Nat, won: Bool}
-
-# The game, as three functions: where it starts, how a list of actions
-# drives it, and what winning means.
-
-assert init:
-  Game
-
-assert run:
-  forall t: List<Act>
-  forall g: Game
-  Game
-
-assert won:
-  forall g: Game
-  Bool
+import ./main.bend as Game
 
 # LAW: winning is a bug.
 #
@@ -49,5 +20,5 @@ assert won:
 # win screen, file a bug against the type checker.
 
 assert winning_is_a_bug:
-  forall t: List<Act>
-  {won(run(t, init())) == False{} : Bool}
+  forall t: List<Game.Act>
+  {Game.won(Game.run(t, Game.init())) == False{} : Bool}

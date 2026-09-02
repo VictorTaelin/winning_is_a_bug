@@ -5,9 +5,14 @@ ships with a **formal proof** that you can't. Not "we tested it a lot" —
 a machine-checked theorem, over every input sequence of every length:
 
 ```python
+# CLAIM:
+# For any sequence of moves,
+# applying it to the initial
+# game state doesn't result
+# in victory.
 assert winning_is_a_bug:
-  forall t: List<Game.Act>
-  {Game.won(Game.run(t, Game.init())) == False{} : Bool}
+  forall moves: List<Game.Move>
+  {Game.is_won(Game.apply(Game.init(), moves)) == False{} : Bool}
 ```
 
 If you ever see the win screen, the type checker is broken. File a bug.
@@ -44,7 +49,7 @@ The [bend-lang](https://github.com/HigherOrderCO/bend4) plugin compiles
 `.bend` imports on the fly — under bun (dev server and bundler) and under
 node (`node --import bend-lang/register`). Every def becomes a function on
 `Game`; the UI asks `Game.grid` for the level and sends every keypress
-through `Game.run`. The browser never decides anything.
+through `Game.apply`. The browser never decides anything.
 
 ```bash
 cd web

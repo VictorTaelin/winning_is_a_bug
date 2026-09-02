@@ -1,7 +1,7 @@
 // Winning Is A Bug: the visual half. The game itself is main.bend, imported
 // as a module: the bend-lang bun plugin compiles it on the fly, and every
 // def becomes a function on Game. The map is asked from Game.grid, so the
-// level has one author. Every action goes through Game.run; this file only
+// level has one author. Every move goes through Game.apply; this file only
 // draws the state that comes back.
 
 import Game from "../main.bend";
@@ -28,7 +28,7 @@ for (let y = 0; y < H; y++) {
 // fields only), Nat is BigInt, Bool is a plain boolean.
 
 const one  = (act) => ({ $: "Con", head: { $: act }, tail: { $: "Nil" } });
-const send = (act, g) => Game.run(one(act), g);
+const send = (act, g) => Game.apply(g, one(act));
 
 let st    = Game.init();
 let moves = 0;

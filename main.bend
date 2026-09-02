@@ -1,14 +1,14 @@
 # Winning Is A Bug -- the game.
 #
 # The whole game, and nothing else: a torus map, a walled room, a flag,
-# five actions, and the level as text (the front end asks `grid` for
+# five moves, and the level as text (the front end asks `grid` for
 # it). The claims about this game live in laws.bend; their proofs live
 # in cert.bend. This file is AI-written and may be rewritten at will --
 # the laws hold or the book stops checking.
 
 import Base
 
-type Act is Data:
+type Move is Data:
   Up{}
   Down{}
   Left{}
@@ -113,7 +113,7 @@ def move(+tx: Nat, +ty: Nat, g: Game) -> Game:
   +w = w0
   pick(Game, wall(tx, ty), Game{x, y, w}, Game{tx, ty, w})
 
-def step(a: Act, g: Game) -> Game:
+def step(a: Move, g: Game) -> Game:
   match a:
     case Up{}:
       Game{x0, y0, w} = g
@@ -144,14 +144,19 @@ def step(a: Act, g: Game) -> Game:
 def init() -> Game:
   Game{start_x(), start_y(), False{}}
 
-def run(t: List<Act>, g: Game) -> Game:
-  match t:
+# The worker takes the list first: the guard wants the shrinking argument
+# in the first live column. `apply` is the API: a board, then its moves.
+def run(moves: List<Move>, g: Game) -> Game:
+  match moves:
     case Nil{}:
       g
-    case Con{a, as}:
-      run(as, step(a, g))
+    case Con{m, ms}:
+      run(ms, step(m, g))
 
-def won(g: Game) -> Bool:
+def apply(g: Game, moves: List<Move>) -> Game:
+  run(moves, g)
+
+def is_won(g: Game) -> Bool:
   Game{x, y, w} = g
   w
 
@@ -188,5 +193,5 @@ def grid(y: Nat) -> String:
 def main() -> IO(Unit):
   do IO<Unit>:
     u : Unit <- IO.print(grid(Nat.sub(map_h(), 1n)))
-    IO.print(pick(String, won(run([Left{}, Left{}, Up{}, Grab{}], init())),
+    IO.print(pick(String, is_won(apply(init(), [Left{}, Left{}, Up{}, Grab{}])),
       "WON (this line is unreachable)", "still not won"))

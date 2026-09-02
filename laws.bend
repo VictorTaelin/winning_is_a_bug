@@ -3,8 +3,11 @@
 import Base
 import ./main.bend as Game
 
-# No list of actions ever wins the game.
-
+# CLAIM:
+# For any sequence of moves,
+# applying it to the initial
+# game state doesn't result
+# in victory.
 assert winning_is_a_bug:
-  forall t: List<Game.Act>
-  {Game.won(Game.run(t, Game.init())) == False{} : Bool}
+  forall moves: List<Game.Move>
+  {Game.is_won(Game.apply(Game.init(), moves)) == False{} : Bool}

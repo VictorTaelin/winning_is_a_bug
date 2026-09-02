@@ -22,13 +22,13 @@ type Game is Data:
 # ---
 
 def map_w() -> Nat:
-  14n
+  12n
 
 def map_h() -> Nat:
-  10n
+  8n
 
 def room_w() -> Nat:
-  4n
+  3n
 
 def room_h() -> Nat:
   3n
@@ -40,10 +40,10 @@ def flag_y() -> Nat:
   1n
 
 def start_x() -> Nat:
-  9n
+  8n
 
 def start_y() -> Nat:
-  6n
+  5n
 
 def nat_eq(a: Nat, b: Nat) -> Bool:
   match a:

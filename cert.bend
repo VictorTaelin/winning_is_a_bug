@@ -136,16 +136,16 @@ def le_split(a: Nat, b: Nat, w: T(Game.nat_le(a, b)))
 # grab on a safe cell never raises the flag (the flag is in the room).
 #
 # The geometric heart is finite, so it is not argued -- it is computed:
-# chk_all(a, 13n) enumerates every cell of the map and checks that a
+# chk_all(a, 11n) enumerates every cell of the map and checks that a
 # step in direction `a` from a safe cell lands on a wall or on a safe
 # cell. The term evaluates to True, so its truth is Unit by conversion,
 # and chk_row_at/chk_all_at index that certificate at any coordinates.
 
 def room(+x: Nat, +y: Nat) -> Bool:
-  Game.nat_le(x, 3n) && Game.nat_le(y, 2n)
+  Game.nat_le(x, 2n) && Game.nat_le(y, 2n)
 
 def okpos(+x: Nat, +y: Nat) -> Bool:
-  (Game.nat_le(x, 13n) && Game.nat_le(y, 9n))
+  (Game.nat_le(x, 11n) && Game.nat_le(y, 7n))
     && (Bool.not(room(x, y)) && Bool.not(Game.wall(x, y)))
 
 def tx(+a: Game.Move, +x: Nat, +y: Nat) -> Nat:
@@ -189,10 +189,10 @@ def chk_row(+a: Game.Move, +x: Nat, y: Nat) -> Bool:
 def chk_all(+a: Game.Move, x: Nat) -> Bool:
   match x:
     case 0n:
-      chk_row(a, 0n, 9n)
+      chk_row(a, 0n, 7n)
     case 1n+p0:
       +p = p0
-      chk_row(a, 1n+p, 9n) && chk_all(a, p)
+      chk_row(a, 1n+p, 7n) && chk_all(a, p)
 
 def chk_row_at(+a: Game.Move, +x: Nat, y: Nat, j: Nat, wr: T(chk_row(a, x, y)),
   wj: T(Game.nat_le(j, y))) -> T(chk(a, x, j)):
@@ -221,46 +221,46 @@ def chk_row_at(+a: Game.Move, +x: Nat, y: Nat, j: Nat, wr: T(chk_row(a, x, y)),
                      wp))
 
 def chk_all_at(+a: Game.Move, x: Nat, i: Nat, wa: T(chk_all(a, x)),
-  wi: T(Game.nat_le(i, x))) -> T(chk_row(a, i, 9n)):
+  wi: T(Game.nat_le(i, x))) -> T(chk_row(a, i, 7n)):
   match x:
     case 0n:
       match i:
         case 0n:
           wa
         case 1n+ip:
-          Empty.absurd(T(chk_row(a, 1n+ip, 9n)), wi)
+          Empty.absurd(T(chk_row(a, 1n+ip, 7n)), wi)
     case 1n+p0:
       match i:
         case 0n:
           +p = p0
-          and_split(chk_row(a, 1n+p, 9n), chk_all(a, p), wa,
-            T(chk_row(a, 0n, 9n)),
+          and_split(chk_row(a, 1n+p, 7n), chk_all(a, p), wa,
+            T(chk_row(a, 0n, 7n)),
             wp => wt => chk_all_at(a, p, 0n, wt, Unit{}))
         case 1n+ip0:
           +p = p0
           +ip = ip0
-          and_split(chk_row(a, 1n+p, 9n), chk_all(a, p), wa,
-            T(chk_row(a, 1n+ip, 9n)),
+          and_split(chk_row(a, 1n+p, 7n), chk_all(a, p), wa,
+            T(chk_row(a, 1n+ip, 7n)),
             wp => wt =>
               or_case(T(Game.nat_le(1n+ip, p)), {ip == p : Nat},
-                le_split(ip, p, wi), T(chk_row(a, 1n+ip, 9n)),
+                le_split(ip, p, wi), T(chk_row(a, 1n+ip, 7n)),
                 l => chk_all_at(a, p, 1n+ip, wt, l),
-                e => %sym(Nat, ip, p, e) : T(chk_row(a, 1n+_, 9n))
+                e => %sym(Nat, ip, p, e) : T(chk_row(a, 1n+_, 7n))
                      wp))
 
-def cert(+a: Game.Move, +x: Nat, +y: Nat, ca: T(chk_all(a, 13n)),
-  lx: T(Game.nat_le(x, 13n)), ly: T(Game.nat_le(y, 9n))) -> T(chk(a, x, y)):
-  chk_row_at(a, x, 9n, y, chk_all_at(a, 13n, x, ca, lx), ly)
+def cert(+a: Game.Move, +x: Nat, +y: Nat, ca: T(chk_all(a, 11n)),
+  lx: T(Game.nat_le(x, 11n)), ly: T(Game.nat_le(y, 7n))) -> T(chk(a, x, y)):
+  chk_row_at(a, x, 7n, y, chk_all_at(a, 11n, x, ca, lx), ly)
 
 # the safe target: from a safe cell, a step lands on a wall or stays safe
 def go_ok(+a: Game.Move, +x: Nat, +y: Nat, +hp: T(okpos(x, y)),
-  ca: T(chk_all(a, 13n)), e: {False{} == Game.wall(tx(a, x, y), ty(a, x, y)) : Bool})
+  ca: T(chk_all(a, 11n)), e: {False{} == Game.wall(tx(a, x, y), ty(a, x, y)) : Bool})
   -> T(okpos(tx(a, x, y), ty(a, x, y))):
-  and_split(Game.nat_le(x, 13n) && Game.nat_le(y, 9n),
+  and_split(Game.nat_le(x, 11n) && Game.nat_le(y, 7n),
     Bool.not(room(x, y)) && Bool.not(Game.wall(x, y)), hp,
     T(okpos(tx(a, x, y), ty(a, x, y))),
     wb => wnr =>
-      and_split(Game.nat_le(x, 13n), Game.nat_le(y, 9n), wb,
+      and_split(Game.nat_le(x, 11n), Game.nat_le(y, 7n), wb,
         T(okpos(tx(a, x, y), ty(a, x, y))),
         lx => ly =>
           imp_elim(okpos(x, y) && Bool.not(Game.wall(tx(a, x, y), ty(a, x, y))),
@@ -280,20 +280,20 @@ def no_flag(+x: Nat, +y: Nat, +hp: T(okpos(x, y)),
     Unit{},
     Empty,
     wex => wey =>
-      and_split(Game.nat_le(x, 13n) && Game.nat_le(y, 9n),
+      and_split(Game.nat_le(x, 11n) && Game.nat_le(y, 7n),
         Bool.not(room(x, y)) && Bool.not(Game.wall(x, y)), hp,
         Empty,
         wb => wrw =>
           and_split(Bool.not(room(x, y)), Bool.not(Game.wall(x, y)), wrw, Empty,
             wnr => wnw =>
               not_elim(room(x, y), wnr,
-                %sym(Nat, x, 1n, eq_sound(x, 1n, wex)) : T(Game.nat_le(_, 3n) && Game.nat_le(y, 2n))
-                %sym(Nat, y, 1n, eq_sound(y, 1n, wey)) : T(Game.nat_le(1n, 3n) && Game.nat_le(_, 2n))
+                %sym(Nat, x, 1n, eq_sound(x, 1n, wex)) : T(Game.nat_le(_, 2n) && Game.nat_le(y, 2n))
+                %sym(Nat, y, 1n, eq_sound(y, 1n, wey)) : T(Game.nat_le(1n, 2n) && Game.nat_le(_, 2n))
                 Unit{}))))
 
 # the chosen cell: a step from a safe cell lands somewhere safe (or stays)
 def go_pos(+a: Game.Move, +x: Nat, +y: Nat, hp: T(okpos(x, y)),
-  ca: T(chk_all(a, 13n)))
+  ca: T(chk_all(a, 11n)))
   -> &nx: Nat -> &ny: Nat -> T(okpos(nx, ny))
    & {Game.Game{nx, ny, False{}}
       == Game.move(tx(a, x, y), ty(a, x, y), Game.Game{x, y, False{}}) : Game.Game}:

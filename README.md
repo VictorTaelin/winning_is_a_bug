@@ -12,7 +12,9 @@ a machine-checked theorem, over every input sequence of every length:
 # in victory.
 assert winning_is_a_bug:
   forall moves: List<Game.Move>
-  {Game.is_won(Game.apply(Game.init(), moves)) == False{} : Bool}
+  board = Game.init()
+  board = Game.apply(board, moves)
+  {Game.is_won(board) == False{} : Bool}
 ```
 
 If you ever see the win screen, the type checker is broken. File a bug.
